@@ -12,6 +12,8 @@
 
 - Write Dockerfile
 
-Improve later:
+Reference later:
+- gRPC
+- Go mod
 - Use buf
 - 
