@@ -1,6 +1,10 @@
 package market
 
+import (
+	"context"
+	"portfolio/server/model"
+)
+
 type Market interface {
-	GetPrice(symbol string) (int64, error)
-	Subscribe(symbol string, priceChan chan int64) error
+	Register(context.Context, model.Portfolio) (chan model.Stream, error)
 }

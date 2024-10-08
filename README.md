@@ -1,5 +1,9 @@
 # portfolio-streaming
 
+- Apply:
+  - Context
+  - Safety Concurency
+
 - Server: API GetPortfolio stream
   - Connect market data (random, any)
   - Translate to Ws (LB, Gateway?)

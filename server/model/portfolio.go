@@ -11,6 +11,11 @@ type Portfolio interface {
 	UpdatePrice(symbol string, price int64) error
 }
 
+type Stream struct {
+	Symbol string
+	Price  int64
+}
+
 type portfolio struct {
 	mt        *sync.Mutex
 	cash      int64
