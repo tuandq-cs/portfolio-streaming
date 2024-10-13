@@ -7,6 +7,8 @@ import (
 	"net"
 
 	pb "portfolio/portfolio"
+	"portfolio/server/model"
+	"portfolio/server/usecase"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
@@ -18,19 +20,44 @@ var (
 
 type grpcServer struct {
 	pb.UnimplementedPortfolioServer
+	uc usecase.StreamPortUC
+}
+
+func NewGrpcServer() pb.PortfolioServer {
+	uc := usecase.NewStreamPortUC()
+	return &grpcServer{
+		uc: uc,
+	}
 }
 
 func (s *grpcServer) GetPerformance(req *pb.GetPerformanceRequest, stream grpc.ServerStreamingServer[pb.GetPerformanceResponse]) error {
 	log.Printf("Received: %v", req)
-	for {
+	port := model.NewPortfolio(1000000, []model.Position{
+		{
+			Symbol: "SSI",
+			Qty:    100,
+		},
+		{
+			Symbol: "VND",
+			Qty:    200,
+		},
+	})
+	navCh, err := s.uc.GetNAV(stream.Context(), port)
+	if err != nil {
+		log.Printf("Failed to get NAV: %v", err)
+		return err
+	}
+
+	for nav := range navCh {
 		if err := stream.Send(&pb.GetPerformanceResponse{
-			Nav: 0,
+			Nav: nav,
 			Pnl: 0,
 		}); err != nil {
 			log.Printf("Failed to send: %v", err)
 			return err
 		}
 	}
+	return nil
 }
 
 func main() {

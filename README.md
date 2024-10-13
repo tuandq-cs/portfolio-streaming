@@ -3,6 +3,7 @@
 - Apply:
   - Context
   - Safety Concurency
+  - gRPC
 
 - Server: API GetPortfolio stream
   - Connect market data (random, any)
@@ -17,7 +18,7 @@
 - Write Dockerfile
 
 Reference later:
-- gRPC
+- gRPC deep dive
 - Go mod
 - Use buf
 - 

@@ -8,7 +8,7 @@ import (
 )
 
 type StreamPortUC interface {
-	GetNAV(ctx context.Context, port model.Portfolio, navCh chan int64) error
+	GetNAV(ctx context.Context, port model.Portfolio) (chan int64, error)
 }
 
 type streamPortUC struct {
@@ -21,19 +21,28 @@ func NewStreamPortUC() StreamPortUC {
 
 type MarketChan map[string]chan int64
 
-func (uc *streamPortUC) GetNAV(ctx context.Context, port model.Portfolio, navCh chan int64) error {
+func (uc *streamPortUC) GetNAV(ctx context.Context, port model.Portfolio) (chan int64, error) {
 	portCh, err := uc.Market.Register(ctx, port)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	navCh <- port.GetNAV()
-	// listen change
-	for stream := range portCh {
-		if err := port.UpdatePrice(stream.Symbol, stream.Price); err != nil {
-			// TODO: unsubscribe
-			log.Print(err)
-		}
+	navCh := make(chan int64)
+	go func() {
+		defer close(navCh)
 		navCh <- port.GetNAV()
-	}
-	return nil
+		for {
+			select {
+			case stream, ok := <-portCh:
+				if !ok {
+					return
+				}
+				if err := port.UpdatePrice(stream.Symbol, stream.Price); err != nil {
+					// TODO: unsubscribe
+					log.Print(err)
+				}
+				navCh <- port.GetNAV()
+			}
+		}
+	}()
+	return navCh, nil
 }
