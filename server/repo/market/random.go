@@ -1,7 +1,10 @@
 package market
 
 import (
+	"bufio"
 	"context"
+	"encoding/csv"
+	"os"
 	"portfolio/server/model"
 	"sync"
 
@@ -31,9 +34,30 @@ func newListener(ctx context.Context, port model.Portfolio, ch chan model.Stream
 }
 
 type random struct {
-	mt     *sync.Mutex
-	ins    map[string]*instrument
-	stream chan model.Stream
+	mt         *sync.Mutex
+	ins        map[string]*instrument
+	stream     chan model.Stream
+	allSymbols []string
+}
+
+func readInstruments(filePath string) ([]string, error) {
+	// read file csv
+	csvFile, err := os.Open(filePath)
+	if err != nil {
+		return nil, err
+	}
+	defer csvFile.Close()
+	reader := csv.NewReader(bufio.NewReader(csvFile))
+	records, err := reader.ReadAll()
+	if err != nil {
+		return nil, err
+	}
+	// get all symbols
+	symbols := make([]string, 0, len(records))
+	for _, record := range records {
+		symbols = append(symbols, record[0])
+	}
+	return symbols, nil
 }
 
 func NewRandom() Market {
